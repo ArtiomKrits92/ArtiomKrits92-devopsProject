@@ -1,0 +1,44 @@
+# terraform variables example
+# copy this file to terraform.tfvars and modify the values
+
+# aws configuration
+aws_region = "us-east-1"
+
+# project configuration
+project_name = "terraform-ansible-webapp"
+environment = "dev"
+owner = "DevOps Student"
+
+# network configuration
+vpc_cidr = "10.0.0.0/16"
+
+public_subnet_cidrs = [
+  "10.0.1.0/24"
+]
+
+private_subnet_cidrs = [
+  "10.0.10.0/24",
+  "10.0.20.0/24"
+]
+
+# ec2 configuration
+instance_type = "t3.micro"
+key_pair_name = "devops-learning-key"
+web_server_count = 2
+
+# application configuration
+app_port = 5000
+health_check_path = "/health"
+
+# security configuration
+allowed_cidr_blocks = [
+  "0.0.0.0/0"
+]
+
+enable_ssh_access = true
+
+# backend configuration
+terraform_state_bucket = "terraform-ansible-webapp-state"
+terraform_state_key = "terraform.tfstate"
+terraform_state_region = "us-east-1"
+dynamodb_table_name = "terraform-ansible-webapp-locks"

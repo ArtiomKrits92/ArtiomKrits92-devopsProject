@@ -1,0 +1,31 @@
+[Unit]
+Description=Web Application Service
+Documentation=https://flask.palletsprojects.com/
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+Group=ec2-user
+WorkingDirectory={{ app_directory }}
+Environment=PATH={{ app_directory }}/venv/bin
+Environment=FLASK_APP=app.py
+Environment=FLASK_ENV=production
+ExecStart={{ app_directory }}/venv/bin/python app.py
+Restart=always
+RestartSec=10
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+LimitNOFILE=65536
+LimitNPROC=32768
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths={{ app_directory }}
+ReadWritePaths={{ log_directory }}
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,29 @@
+DEVOPS PROJECT SUBMISSION
+
+Student: Artiom Krits
+Project: DevOps Learning Project with Terraform and Ansible
+Repository: https://github.com/ArtiomKrits92/ArtiomKrits92-devopsProject
+
+This project demonstrates a complete DevOps workflow using Infrastructure as Code (Terraform) 
+and Configuration Management (Ansible) to deploy a load-balanced web application on AWS.
+
+Key Features:
+- Infrastructure as Code with Terraform
+- Configuration Management with Ansible
+- Load-balanced Flask web application
+- AWS cloud infrastructure
+- Automated deployment scripts
+
+Technical Stack:
+- Terraform (Infrastructure as Code)
+- Ansible (Configuration Management)
+- AWS (Cloud Platform)
+- Python/Flask (Web Application)
+- Bash (Automation Scripts)
+
+Setup Instructions:
+1. Clone the repository: git clone https://github.com/ArtiomKrits92/ArtiomKrits92-devopsProject
+2. Navigate to project: cd ArtiomKrits92-devopsProject
+3. Setup credentials: ./scripts/setup-credentials.sh
+4. Deploy infrastructure: ./scripts/deploy.sh
+5. Access application: Get URL from Terraform outputs

@@ -1,0 +1,51 @@
+# application configuration
+# settings for the web application
+
+import os
+
+# basic configuration
+APP_NAME = "{{ project_name }}"
+APP_VERSION = "1.0.0"
+DEBUG = False
+
+# server configuration
+HOST = '0.0.0.0'
+PORT = {{ app_port }}
+
+# logging configuration
+LOG_LEVEL = 'INFO'
+LOG_FILE = '{{ log_directory }}/webapp.log'
+LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+
+# security configuration
+SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+
+# database configuration
+DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///webapp.db')
+
+# cache configuration
+CACHE_TYPE = 'simple'
+CACHE_TIMEOUT = 300
+
+# application specific settings
+APP_DIR = '{{ app_directory }}'
+STATIC_DIR = os.path.join(APP_DIR, 'static')
+TEMPLATES_DIR = os.path.join(APP_DIR, 'templates')
+
+# health check configuration
+HEALTH_CHECK_PATH = '/health'
+HEALTH_CHECK_TIMEOUT = 5
+
+# monitoring configuration
+ENABLE_MONITORING = True
+MONITORING_INTERVAL = 60
+
+# environment variables
+def get_env_variable(var_name, default=None):
+    return os.environ.get(var_name, default)
+
+# override with environment variables if they exist
+DEBUG = get_env_variable('DEBUG', DEBUG)
+LOG_LEVEL = get_env_variable('LOG_LEVEL', LOG_LEVEL)
+SECRET_KEY = get_env_variable('SECRET_KEY', SECRET_KEY)
+DATABASE_URL = get_env_variable('DATABASE_URL', DATABASE_URL)

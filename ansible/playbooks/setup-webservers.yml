@@ -1,0 +1,188 @@
+# setup web servers playbook
+# configures the web server instances
+
+---
+- name: "Setup Web Servers for ${project_name}"
+  hosts: web_servers
+  become: yes
+  gather_facts: yes
+  serial: 2
+  
+  vars:
+    app_port: "{{ app_port | default('5000') }}"
+    project_name: "{{ project_name | default('terraform-ansible-webapp') }}"
+    app_directory: "/opt/webapp"
+    service_name: "webapp"
+    log_directory: "/var/log/webapp"
+    python_version: "3"
+    
+  pre_tasks:
+    - name: "Display playbook information"
+      debug:
+        msg: "Setting up web servers for project: {{ project_name }}"
+        
+    - name: "Check if we're running on the right hosts"
+      debug:
+        msg: "Running on {{ inventory_hostname }} ({{ ansible_default_ipv4.address }})"
+
+  tasks:
+    # system update and package installation
+    - name: "Update package cache"
+      yum:
+        update_cache: yes
+      become: yes
+      
+    - name: "Install required packages"
+      yum:
+        name:
+          - python{{ python_version }}
+          - python{{ python_version }}-pip
+          - git
+          - htop
+          - wget
+          - firewalld
+        state: present
+      become: yes
+      
+    - name: "Start and enable firewalld"
+      systemd:
+        name: firewalld
+        state: started
+        enabled: yes
+      become: yes
+
+    # python environment setup
+    - name: "Create application directory"
+      file:
+        path: "{{ app_directory }}"
+        state: directory
+        owner: ec2-user
+        group: ec2-user
+        mode: '0755'
+      become: yes
+      
+    - name: "Create Python virtual environment"
+      pip:
+        name: virtualenv
+        state: present
+      become: yes
+      
+    - name: "Create virtual environment"
+      command: "python{{ python_version }} -m venv {{ app_directory }}/venv"
+      args:
+        creates: "{{ app_directory }}/venv"
+      become: yes
+      become_user: ec2-user
+      
+    - name: "Install Python packages"
+      pip:
+        name:
+          - flask
+          - gunicorn
+        virtualenv: "{{ app_directory }}/venv"
+        state: present
+      become: yes
+      become_user: ec2-user
+
+    # application files
+    - name: "Create Flask application file"
+      template:
+        src: "app.py.j2"
+        dest: "{{ app_directory }}/app.py"
+        owner: ec2-user
+        group: ec2-user
+        mode: '0755'
+      become: yes
+      
+    - name: "Create application configuration file"
+      template:
+        src: "app_config.py.j2"
+        dest: "{{ app_directory }}/config.py"
+        owner: ec2-user
+        group: ec2-user
+        mode: '0644'
+      become: yes
+
+    # systemd service configuration
+    - name: "Create systemd service file"
+      template:
+        src: "webapp.service.j2"
+        dest: "/etc/systemd/system/{{ service_name }}.service"
+        mode: '0644'
+      become: yes
+      notify: "restart webapp service"
+      
+    - name: "Reload systemd daemon"
+      systemd:
+        daemon_reload: yes
+      become: yes
+      
+    - name: "Enable webapp service"
+      systemd:
+        name: "{{ service_name }}"
+        enabled: yes
+        state: started
+      become: yes
+
+    # firewall configuration
+    - name: "Allow application port through firewall"
+      firewalld:
+        port: "{{ app_port }}/tcp"
+        permanent: yes
+        state: enabled
+        immediate: yes
+      become: yes
+      
+    - name: "Reload firewall"
+      firewalld:
+        state: reloaded
+      become: yes
+
+    # logging configuration
+    - name: "Create log directory"
+      file:
+        path: "{{ log_directory }}"
+        state: directory
+        owner: ec2-user
+        group: ec2-user
+        mode: '0755'
+      become: yes
+      
+    - name: "Set up log rotation"
+      template:
+        src: "logrotate.conf.j2"
+        dest: "/etc/logrotate.d/{{ service_name }}"
+        mode: '0644'
+      become: yes
+
+    # health check
+    - name: "Wait for service to start"
+      wait_for:
+        port: "{{ app_port }}"
+        host: "{{ ansible_default_ipv4.address }}"
+        delay: 10
+        timeout: 60
+      become: yes
+      
+    - name: "Test application health endpoint"
+      uri:
+        url: "http://{{ ansible_default_ipv4.address }}:{{ app_port }}/health"
+        method: GET
+        status_code: 200
+      register: health_check
+      
+    - name: "Display health check result"
+      debug:
+        msg: "Health check {{ 'passed' if health_check.status == 200 else 'failed' }}"
+
+  handlers:
+    - name: "restart webapp service"
+      systemd:
+        name: "{{ service_name }}"
+        state: restarted
+      become: yes
+      
+    - name: "reload systemd daemon"
+      systemd:
+        daemon_reload: yes
+      become: yes

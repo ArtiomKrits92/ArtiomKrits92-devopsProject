@@ -1,0 +1,54 @@
+# web server role handlers
+# handlers that are triggered by tasks
+
+---
+# service management handlers
+- name: "restart webapp service"
+  systemd:
+    name: "{{ service_name }}"
+    state: restarted
+  become: yes
+  
+- name: "start webapp service"
+  systemd:
+    name: "{{ service_name }}"
+    state: started
+  become: yes
+  
+- name: "stop webapp service"
+  systemd:
+    name: "{{ service_name }}"
+    state: stopped
+  become: yes
+  
+- name: "reload webapp service"
+  systemd:
+    name: "{{ service_name }}"
+    state: reloaded
+  become: yes
+
+# system management handlers
+- name: "reload systemd daemon"
+  systemd:
+    daemon_reload: yes
+  become: yes
+  
+- name: "reload firewall"
+  firewalld:
+    state: reloaded
+  become: yes
+
+# application management handlers
+- name: "restart application"
+  systemd:
+    name: "{{ service_name }}"
+    state: restarted
+  become: yes
+  when: service_status is defined and service_status.status.ActiveState == 'active'
+  
+- name: "start application"
+  systemd:
+    name: "{{ service_name }}"
+    state: started
+  become: yes
+  when: service_status is defined and service_status.status.ActiveState != 'active'
